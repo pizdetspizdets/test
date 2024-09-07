@@ -29,9 +29,13 @@
             font-size: 24px;
             color: white;
         }
-        #input-display {
+        #input-display, #target-display {
             font-size: 24px;
             margin-bottom: 20px;
+        }
+        #result {
+            font-weight: bold;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -39,9 +43,9 @@
     <div id="game-container">
         <h1>Морзе-кликер: ivan</h1>
         <p>Кликните для ввода кода Морзе. Короткий клик - точка, длинный клик - тире.</p>
+        <div id="target-display"></div>
         <div id="input-display"></div>
         <div id="click-area">Кликайте здесь</div>
-        <button id="submit-btn">Проверить</button>
         <p id="result"></p>
     </div>
 
@@ -50,14 +54,24 @@
             'i': '..', 'v': '...-', 'a': '.-', 'n': '-.'
         };
         const targetWord = 'ivan';
-        const targetMorse = targetWord.split('').map(char => morseAlphabet[char]).join(' ');
+        const targetMorse = targetWord.split('').map(char => morseAlphabet[char]);
         
         let currentInput = '';
+        let currentLetterIndex = 0;
         let clickStartTime;
         const clickArea = document.getElementById('click-area');
         const inputDisplay = document.getElementById('input-display');
-        const submitBtn = document.getElementById('submit-btn');
+        const targetDisplay = document.getElementById('target-display');
         const resultDisplay = document.getElementById('result');
+
+        function updateTargetDisplay() {
+            targetDisplay.textContent = `Введите букву "${targetWord[currentLetterIndex]}": ${targetMorse[currentLetterIndex]}`;
+        }
+
+        function resetInput() {
+            currentInput = '';
+            updateDisplay();
+        }
 
         clickArea.addEventListener('mousedown', () => {
             clickStartTime = new Date().getTime();
@@ -71,21 +85,31 @@
                 currentInput += '-';
             }
             updateDisplay();
-        });
-
-        submitBtn.addEventListener('click', () => {
-            if (currentInput === targetMorse) {
-                resultDisplay.textContent = 'Поздравляем! Вы правильно ввели "ivan" азбукой Морзе!';
-            } else {
-                resultDisplay.textContent = 'Неправильно. Попробуйте еще раз!';
-            }
+            checkInput();
         });
 
         function updateDisplay() {
             inputDisplay.textContent = currentInput;
         }
+
+        function checkInput() {
+            if (currentInput === targetMorse[currentLetterIndex]) {
+                resultDisplay.textContent = `Правильно! Буква "${targetWord[currentLetterIndex]}" введена верно.`;
+                currentLetterIndex++;
+                if (currentLetterIndex === targetWord.length) {
+                    resultDisplay.textContent = 'Поздравляем! Вы правильно ввели все слово "ivan"!';
+                    clickArea.style.pointerEvents = 'none';
+                } else {
+                    resetInput();
+                    updateTargetDisplay();
+                }
+            } else if (currentInput.length === targetMorse[currentLetterIndex].length) {
+                resultDisplay.textContent = 'Неправильно. Попробуйте ещё раз.';
+                resetInput();
+            }
+        }
+
+        updateTargetDisplay();
     </script>
 </body>
 </html>
-
-```
