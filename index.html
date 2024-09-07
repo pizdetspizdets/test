@@ -29,6 +29,7 @@
             font-size: 24px;
             color: white;
             user-select: none;
+            touch-action: none;
         }
         #progress-display, #input-display {
             font-size: 24px;
@@ -59,7 +60,8 @@
         
         let currentInput = '';
         let currentLetterIndex = 0;
-        let clickStartTime;
+        let isPointerDown = false;
+        let pointerDownTime;
         const clickArea = document.getElementById('click-area');
         const inputDisplay = document.getElementById('input-display');
         const progressDisplay = document.getElementById('progress-display');
@@ -74,21 +76,30 @@
             updateDisplay();
         }
 
-        clickArea.addEventListener('mousedown', (e) => {
+        clickArea.addEventListener('pointerdown', (e) => {
             e.preventDefault();
-            clickStartTime = new Date().getTime();
+            isPointerDown = true;
+            pointerDownTime = new Date().getTime();
         });
 
-        clickArea.addEventListener('mouseup', (e) => {
+        clickArea.addEventListener('pointerup', (e) => {
             e.preventDefault();
-            const clickDuration = new Date().getTime() - clickStartTime;
-            if (clickDuration < 250) {
-                currentInput += '.';
-            } else {
-                currentInput += '-';
+            if (isPointerDown) {
+                const pointerUpTime = new Date().getTime();
+                const clickDuration = pointerUpTime - pointerDownTime;
+                if (clickDuration < 250) {
+                    currentInput += '.';
+                } else {
+                    currentInput += '-';
+                }
+                updateDisplay();
+                checkInput();
+                isPointerDown = false;
             }
-            updateDisplay();
-            checkInput();
+        });
+
+        clickArea.addEventListener('pointerleave', (e) => {
+            isPointerDown = false;
         });
 
         function updateDisplay() {
