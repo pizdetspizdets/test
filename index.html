@@ -16,39 +16,46 @@
         }
         #game-container {
             text-align: center;
-        }
-        #click-area {
             width: 300px;
-            height: 200px;
-            background-color: #3498db;
-            margin: 20px auto;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            color: white;
-            user-select: none;
-            touch-action: none;
         }
-        #progress-display, #input-display {
+        .input-button {
+            width: 100px;
+            height: 100px;
+            margin: 10px;
             font-size: 24px;
-            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        #progress-display, #input-display, #current-letter, #timer, #attempts {
+            font-size: 18px;
+            margin-bottom: 10px;
         }
         #result {
             font-weight: bold;
             margin-top: 20px;
+        }
+        #restart-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>Морзе-кликер: ivan</h1>
-        <p>Кликните для ввода кода Морзе. Короткий клик - точка, длинный клик - тире.</p>
+        <p>Нажимайте кнопки для ввода кода Морзе.</p>
         <div id="progress-display"></div>
+        <div id="current-letter"></div>
+        <div id="timer">Время: 10с</div>
+        <div id="attempts">Попытки: 0</div>
         <div id="input-display"></div>
-        <div id="click-area">Кликайте здесь</div>
+        <div>
+            <button class="input-button" id="dot-button">.</button>
+            <button class="input-button" id="dash-button">-</button>
+        </div>
         <p id="result"></p>
+        <button id="restart-button">Начать заново</button>
     </div>
 
     <script>
@@ -60,15 +67,26 @@
         
         let currentInput = '';
         let currentLetterIndex = 0;
-        let isPointerDown = false;
-        let pointerDownTime;
-        const clickArea = document.getElementById('click-area');
+        let attempts = 0;
+        let timer;
+        let timeLeft = 10;
+
+        const dotButton = document.getElementById('dot-button');
+        const dashButton = document.getElementById('dash-button');
         const inputDisplay = document.getElementById('input-display');
         const progressDisplay = document.getElementById('progress-display');
+        const currentLetterDisplay = document.getElementById('current-letter');
+        const timerDisplay = document.getElementById('timer');
+        const attemptsDisplay = document.getElementById('attempts');
         const resultDisplay = document.getElementById('result');
+        const restartButton = document.getElementById('restart-button');
 
         function updateProgressDisplay() {
             progressDisplay.textContent = `Прогресс: ${targetWord.slice(0, currentLetterIndex)}`;
+        }
+
+        function updateCurrentLetterDisplay() {
+            currentLetterDisplay.textContent = `Текущая буква: ${targetWord[currentLetterIndex]}`;
         }
 
         function resetInput() {
@@ -76,31 +94,14 @@
             updateDisplay();
         }
 
-        clickArea.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            isPointerDown = true;
-            pointerDownTime = new Date().getTime();
-        });
+        function addInput(symbol) {
+            currentInput += symbol;
+            updateDisplay();
+            checkInput();
+        }
 
-        clickArea.addEventListener('pointerup', (e) => {
-            e.preventDefault();
-            if (isPointerDown) {
-                const pointerUpTime = new Date().getTime();
-                const clickDuration = pointerUpTime - pointerDownTime;
-                if (clickDuration < 250) {
-                    currentInput += '.';
-                } else {
-                    currentInput += '-';
-                }
-                updateDisplay();
-                checkInput();
-                isPointerDown = false;
-            }
-        });
-
-        clickArea.addEventListener('pointerleave', (e) => {
-            isPointerDown = false;
-        });
+        dotButton.addEventListener('click', () => addInput('.'));
+        dashButton.addEventListener('click', () => addInput('-'));
 
         function updateDisplay() {
             inputDisplay.textContent = currentInput;
@@ -110,20 +111,67 @@
             if (currentInput === targetMorse[currentLetterIndex]) {
                 currentLetterIndex++;
                 updateProgressDisplay();
+                updateCurrentLetterDisplay();
                 if (currentLetterIndex === targetWord.length) {
-                    resultDisplay.textContent = 'Поздравляем! Вы правильно ввели все слово "ivan"!';
-                    clickArea.style.pointerEvents = 'none';
+                    endGame(true);
                 } else {
                     resultDisplay.textContent = 'Правильно! Вводите следующую букву.';
                     resetInput();
+                    resetTimer();
                 }
             } else if (currentInput.length === targetMorse[currentLetterIndex].length) {
+                attempts++;
+                attemptsDisplay.textContent = `Попытки: ${attempts}`;
                 resultDisplay.textContent = 'Неправильно. Попробуйте ещё раз.';
                 resetInput();
             }
         }
 
-        updateProgressDisplay();
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Время: ${timeLeft}с`;
+                if (timeLeft === 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timeLeft = 10;
+            timerDisplay.textContent = `Время: ${timeLeft}с`;
+            startTimer();
+        }
+
+        function endGame(isWin) {
+            clearInterval(timer);
+            dotButton.disabled = true;
+            dashButton.disabled = true;
+            if (isWin) {
+                resultDisplay.textContent = `Поздравляем! Вы правильно ввели все слово "ivan" за ${attempts} попыток!`;
+            } else {
+                resultDisplay.textContent = 'Время вышло! Игра окончена.';
+            }
+        }
+
+        function startGame() {
+            currentInput = '';
+            currentLetterIndex = 0;
+            attempts = 0;
+            updateProgressDisplay();
+            updateCurrentLetterDisplay();
+            resetTimer();
+            updateDisplay();
+            attemptsDisplay.textContent = 'Попытки: 0';
+            resultDisplay.textContent = '';
+            dotButton.disabled = false;
+            dashButton.disabled = false;
+        }
+
+        restartButton.addEventListener('click', startGame);
+
+        startGame();
     </script>
 </body>
 </html>
