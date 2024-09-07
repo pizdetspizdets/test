@@ -28,8 +28,9 @@
             align-items: center;
             font-size: 24px;
             color: white;
+            user-select: none;
         }
-        #input-display, #target-display {
+        #progress-display, #input-display {
             font-size: 24px;
             margin-bottom: 20px;
         }
@@ -43,7 +44,7 @@
     <div id="game-container">
         <h1>Морзе-кликер: ivan</h1>
         <p>Кликните для ввода кода Морзе. Короткий клик - точка, длинный клик - тире.</p>
-        <div id="target-display"></div>
+        <div id="progress-display"></div>
         <div id="input-display"></div>
         <div id="click-area">Кликайте здесь</div>
         <p id="result"></p>
@@ -61,11 +62,11 @@
         let clickStartTime;
         const clickArea = document.getElementById('click-area');
         const inputDisplay = document.getElementById('input-display');
-        const targetDisplay = document.getElementById('target-display');
+        const progressDisplay = document.getElementById('progress-display');
         const resultDisplay = document.getElementById('result');
 
-        function updateTargetDisplay() {
-            targetDisplay.textContent = `Введите букву "${targetWord[currentLetterIndex]}": ${targetMorse[currentLetterIndex]}`;
+        function updateProgressDisplay() {
+            progressDisplay.textContent = `Прогресс: ${targetWord.slice(0, currentLetterIndex)}`;
         }
 
         function resetInput() {
@@ -73,11 +74,13 @@
             updateDisplay();
         }
 
-        clickArea.addEventListener('mousedown', () => {
+        clickArea.addEventListener('mousedown', (e) => {
+            e.preventDefault();
             clickStartTime = new Date().getTime();
         });
 
-        clickArea.addEventListener('mouseup', () => {
+        clickArea.addEventListener('mouseup', (e) => {
+            e.preventDefault();
             const clickDuration = new Date().getTime() - clickStartTime;
             if (clickDuration < 250) {
                 currentInput += '.';
@@ -94,14 +97,14 @@
 
         function checkInput() {
             if (currentInput === targetMorse[currentLetterIndex]) {
-                resultDisplay.textContent = `Правильно! Буква "${targetWord[currentLetterIndex]}" введена верно.`;
                 currentLetterIndex++;
+                updateProgressDisplay();
                 if (currentLetterIndex === targetWord.length) {
                     resultDisplay.textContent = 'Поздравляем! Вы правильно ввели все слово "ivan"!';
                     clickArea.style.pointerEvents = 'none';
                 } else {
+                    resultDisplay.textContent = 'Правильно! Вводите следующую букву.';
                     resetInput();
-                    updateTargetDisplay();
                 }
             } else if (currentInput.length === targetMorse[currentLetterIndex].length) {
                 resultDisplay.textContent = 'Неправильно. Попробуйте ещё раз.';
@@ -109,7 +112,7 @@
             }
         }
 
-        updateTargetDisplay();
+        updateProgressDisplay();
     </script>
 </body>
 </html>
